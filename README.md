@@ -22,7 +22,7 @@ brew install deno
 ## Running the snake locally
 To run the snake locally type
 ```bash
-deno run --allow-net --allow-env main.ts
+deno run --allow-net --allow-env app.ts
 ```
 Since Deno has no permissions by default, the `--allow-net` gives your snake network access, and `--allow-env` gives your snake access to environment variables.
 
