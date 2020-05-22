@@ -19,3 +19,12 @@ export const newCell = (x: number, y: number): Cell => {
 export const applyOffsetToCell = (offset: Cell, cell: Cell): Cell => {
     return { x: offset.x + cell.x, y: offset.y + cell.y };
 }
+
+
+/**
+ * String representation of Cell
+ * @param cell 
+ */
+export const cellToString = (cell: Cell) => {
+    return `{ x: ${cell.x}, y: ${cell.y} }`;
+  };
