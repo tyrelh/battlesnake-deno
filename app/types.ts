@@ -31,3 +31,17 @@ export interface GameState {
     board: Board,
     you: Snake
 }
+
+// Battlesnake API v1 Responses
+
+export interface RootResponse {
+    color: string,
+    head: string,
+    tail: string,
+    apiversion: string,
+    author: string
+}
+
+export interface MoveResponse {
+    move: string
+}
