@@ -1,4 +1,4 @@
-import { Snake, GameState } from "./types.ts";
+import { Snake, GameState, Cell } from "./types.ts";
 import { PARAMS } from "./params.ts";
 
 export const isFriendly = (snake: Snake): boolean => {
@@ -13,4 +13,8 @@ export const isFriendly = (snake: Snake): boolean => {
 
 export const isMe = (snake: Snake, gameState: GameState): boolean => {
     return (snake.id === gameState.you.id);
+}
+
+export const myLocation = (gameState: GameState): Cell => {
+    return gameState.you.head;
 }
