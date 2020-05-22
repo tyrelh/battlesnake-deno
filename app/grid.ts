@@ -2,7 +2,7 @@ import { GameState, Cell, Snake } from "./types.ts";
 import { KEYS as K } from "./keys.ts";
 import { newCell, applyOffsetToCell } from "./utils.ts";
 import * as log from "./logger.ts";
-import { ORIGIN_POS, PARAMS } from "./params.ts";
+import { ORIGIN_POS, PARAMS as P } from "./params.ts";
 import { isFriendly, isMe } from "./self.ts";
 
 /**
@@ -100,7 +100,7 @@ export const buildGrid = (gameState: GameState): number[][] => {
         }
     });
 
-    if (PARAMS.DEBUG_MAPS) {
+    if (P.DEBUG_MAPS) {
         printGrid(grid);
     }
     return grid;
@@ -137,8 +137,31 @@ export const updateGridCell = (grid: number[][], cell: Cell, newValue: number): 
 }
 
 
+/**
+ * Return value of a grid cell
+ * @param cell 
+ * @param grid 
+ */
 export const getGridCellValue = (cell: Cell, grid: number[][]): number => {
     return grid[cell.y][cell.x];
+}
+
+
+/**
+ * Return a deep copy of a grid
+ * @param grid 
+ */
+export const copyGrid = (grid: number[][]): number[][] => {
+    let gridCopy;
+    gridCopy = new Array(grid.length);
+    for (let i = 0; i < grid.length; i++) {
+        gridCopy[i] = new Array(grid[0].length);
+        for (let j = 0 ;j< grid[0].length; j++) {
+            const cell = newCell(j, i);
+            updateGridCell(gridCopy, cell, getGridCellValue(cell, grid))
+        }
+    }
+    return gridCopy;
 }
 
 
@@ -185,4 +208,24 @@ export const printGrid = (grid: number[][]) => {
  */
 export const outOfBounds = (cell: Cell, grid: number[][]): boolean => {
     return (cell.x < 0 || cell.y < 0 || cell.y >= grid.length || cell.x >= grid[0].length);
+}
+
+
+/**
+ * Test if Cell is on perimeter of game (0 spaces between cell and outOfBounds)
+ * @param cell 
+ * @param grid 
+ */
+export const onPerimeter = (cell: Cell, grid: number[][]): boolean => {
+    return (cell.x === 0 || cell.x === grid[0].length - 1 || cell.y === 0 || cell.y === grid.length - 1);
+}
+
+
+/**
+ * Test if Cell is near perimeter of game, but not on perimeter (1 space between cell and outOfBounds)
+ * @param cell 
+ * @param grid 
+ */
+export const nearPerimeter = (cell: Cell, grid: number[][]): boolean => {
+    return (cell.x === 1 || cell.x === grid[0].length - 2 || cell.y === 1 || cell.y === grid.length - 2);
 }
