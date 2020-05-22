@@ -2,6 +2,7 @@ import { Request, Response } from "https://deno.land/x/oak/mod.ts";
 import { GameState, MoveResponse, RootResponse } from "./types.ts";
 import * as log from "./logger.ts";
 import { PARAMS } from "./params.ts";
+import { buildGrid } from "./grid.ts";
 
 
 export const root = (): RootResponse => {
@@ -31,6 +32,7 @@ export const move = (gameState: GameState): MoveResponse => {
     const health = gameState.you.health;
     const numSnakes = gameState.board.snakes.length;
 
+    const grid = buildGrid(gameState);
 
     const endTime = Date.now();
     const timeTaken = endTime - startTime;
