@@ -1,15 +1,36 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application, Router, Request, Response } from "https://deno.land/x/oak/mod.ts";
 import * as flags from "https://deno.land/std/flags/mod.ts";
-import { root, start, move, end } from "./app/main.ts";
+import { root, move } from "./app/main.ts";
+import { GameState } from "./app/types.ts";
 
 const argPort = flags.parse(Deno.args).port;
 const PORT = Number(argPort) || 5000;
 
+const rootRoute = ({response}: {response: Response}) => {
+    response.body = root();
+    response.status = 200;
+}
+
+const startRoute = ({response}: {response: Response}) => {
+    response.status = 200;
+}
+
+const moveRoute = async ({request, response}: {request: Request, response: Response}) => {
+    const requestBody = await request.body();
+    const gameState: GameState = requestBody.value;
+    response.body = move(gameState);
+    response.status = 200;
+}
+
+const endRoute = ({response}: {response: Response}) => {
+    response.status = 200;
+}
+
 const router = new Router();
-router.get("/", root);
-router.post("/start", start);
-router.post("/move", move);
-router.post("/end", end);
+router.get("/", rootRoute);
+router.post("/start", startRoute);
+router.post("/move", moveRoute);
+router.post("/end", endRoute);
 
 const app = new Application();
 app.use(router.routes());
