@@ -1,9 +1,9 @@
-import { PARAMS } from "./params.ts";
+import { PARAMS as P } from "./params.ts";
 
 export const divider = "`\n\n#######################################";
 
 export const error = (message: string, exception?: Error) => {
-    if (PARAMS.CONSOLE_LOG) {
+    if (P.CONSOLE_LOG) {
         if (exception) {
             console.error(message, exception);
         }
@@ -14,16 +14,16 @@ export const error = (message: string, exception?: Error) => {
 }
 
 export const status = (message: string) => {
-    if (PARAMS.STATUS) {
-        if (PARAMS.CONSOLE_LOG) {
+    if (P.STATUS) {
+        if (P.CONSOLE_LOG) {
             console.log(message);
         }
     }
 }
 
 export const debug = (message: string) => {
-    if (PARAMS.DEBUG) {
-        if (PARAMS.CONSOLE_LOG) {
+    if (P.DEBUG) {
+        if (P.CONSOLE_LOG) {
             console.log(message);
         }
     }
