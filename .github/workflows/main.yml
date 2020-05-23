@@ -24,7 +24,7 @@ jobs:
     - uses: denolib/setup-deno@master
       with:
         deno-version: v1.x
-    - run: deno run https://deno.land/std/examples/welcome.ts
+    - run: deno test
 
     # Runs a single command using the runners shell
 #     - name: Run a one-line script
