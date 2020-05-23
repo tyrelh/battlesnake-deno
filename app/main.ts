@@ -1,11 +1,17 @@
-import { GameRequest, MoveResponse, RootResponse } from "./types.ts";
+import { GameRequest, MoveResponse, RootResponse, Snake } from "./types.ts";
 import * as log from "./logger.ts";
 import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
 import { myMinimumHealth } from "./self.ts";
 import { SAME_NUMBER_OF_SNAKES } from "./weights.ts";
 import { eat } from "./move.ts";
-import { DIRECTION, UP } from "./keys.ts";
+import { DIRECTION, RIGHT } from "./keys.ts";
+
+// globals to track over course of game
+// will break if multiple games are running simultaneously
+let slowest = 0;
+let slowestMove = 0;
+let moveTimes: number[] = [];
 
 
 export const root = (): RootResponse => {
@@ -25,6 +31,27 @@ export const root = (): RootResponse => {
 }
 
 
+export const start = (gameRequest: GameRequest): void => {
+    try {
+        // ensure previous game logs are cleared
+        // log.initLogs();
+        log.status(`####################################### STARTING GAME ${gameRequest.game.id}`);
+        log.status(`My snake id is ${gameRequest.you.id}`);
+        slowest = 0;
+        slowestMove = 0;
+        moveTimes = [];
+    
+        log.status("Snakes playing this game are:");
+        for (let snake of gameRequest.board.snakes) {
+            log.status(snake.name);
+        }
+    }
+    catch (e) {
+        log.error(`ex in main.start: ${e}`);
+    }
+}
+
+
 export const move = (gameRequest: GameRequest): MoveResponse => {
     const startTime = Date.now();
     let move = -1;
@@ -40,18 +67,52 @@ export const move = (gameRequest: GameRequest): MoveResponse => {
     const state = new State(gameRequest);
     try {
         state.grid.preprocessGrid(state)
-
-        if (health < myMinimumHealth(state)) {
-            move = eat(state, playSafe);
-        }
-
     } catch (e) {
-        log.error("Ex in main.buildGrid: ", e);
+        log.error("EX in main.preprocessGrid: ", e);
+    }
+
+    // if you are hungry or small you gotta eat
+    if (health < myMinimumHealth(state)) {
+        try {
+            move = eat(state, playSafe);
+        } catch (e) {
+            log.error("Ex in main.hungry: ", e);
+        }
+    }
+
+    // backup plan?
+    if (move < 0) {
+        try {
+            move = eat(state, playSafe);
+        } catch (e) {
+            log.error("Ex in main.hungry: ", e);
+        }
     }
 
     const endTime = Date.now();
     const timeTaken = endTime - startTime;
     log.status(`${health} health remaining.`);
     log.status(`Turn ${state.turn} took ${timeTaken}ms.\n`);
-    return { move: (move > 0) ? DIRECTION[move] : DIRECTION[UP] };
+    const result = { move: (move >= 0) ? DIRECTION[move] : DIRECTION[RIGHT] };
+    return result;
 }
+
+
+export const end = (gameRequest: GameRequest): void => {
+    try {
+        log.status(`\nSlowest move ${slowestMove} took ${slowest}ms.`);
+        const numberOfMoves = moveTimes.length;
+        const totalTime = moveTimes.reduce((acc, c) => acc + c, 0);
+        const averageTime = totalTime / numberOfMoves;
+        log.status(`Total time computing was ${totalTime}ms for ${numberOfMoves} moves.`);
+        log.status(`Average move time was ${averageTime.toFixed(1)}ms.`);
+        // write logs for this game to file
+        // log.writeLogs(req.body);
+        slowest = 0;
+        slowestMove = 0;
+        moveTimes = [];
+    } catch (e) {
+        log.error("EX in main.end: ", e)
+    }
+    
+  };
