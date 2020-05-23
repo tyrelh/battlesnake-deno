@@ -1,7 +1,7 @@
 import { Snake, GameRequest, Cell } from "./types.ts";
 import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
-import { SURVIVAL_MIN_HEALTH, LONG_GAME_HEALTH_RESILIENCY } from "./weights.ts";
+import { SURVIVAL_MIN_HEALTH, LONG_GAME_HEALTH_RESILIENCY, MULTIPLIER } from "./weights.ts";
 
 
 export const isFriendly = (snake: Snake): boolean => {
@@ -26,4 +26,8 @@ export const myLocation = (state: State): Cell => {
 
 export const myMinimumHealth = (state: State): number => {
     return (SURVIVAL_MIN_HEALTH - Math.floor(state.turn / LONG_GAME_HEALTH_RESILIENCY));
+}
+
+export const myHungerUrgency = (state: State): number => {
+    return (Math.round((101 - state.self.health) * MULTIPLIER.HUNGER_URGENCY));
 }

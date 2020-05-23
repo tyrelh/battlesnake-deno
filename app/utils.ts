@@ -1,8 +1,7 @@
 import { Cell } from "./types.ts";
 import { UP, DOWN, LEFT, RIGHT } from "./keys.ts";
 import { Y_DIRECTION } from "./params.ts";
-// import { KEYS as K } from "./keys.ts";
-// import { API_VERSION }
+import * as log from "./logger.ts";
 
 
 /**
@@ -18,9 +17,9 @@ export const newCell = (x: number, y: number): Cell => {
 export const applyMoveToCell = (move: number, cell: Cell): Cell => {
     switch (move) {
         case UP:
-            return newCell(cell.x, cell.y + (Y_DIRECTION === UP ? -1 : 1));
+            return newCell(cell.x, cell.y + (Y_DIRECTION === UP ? 1 : -1));
         case DOWN:
-            return newCell(cell.x, cell.y = (Y_DIRECTION === UP ? 1 : -1));
+            return newCell(cell.x, cell.y + (Y_DIRECTION === UP ? -1 : 1));
         case LEFT:
             return newCell(cell.x - 1, cell.y);
         case RIGHT:
