@@ -1,10 +1,24 @@
 import { GameRequest, Cell, Snake } from "./types.ts";
 import * as log from "./logger.ts";
 import { myLocation, isMe } from "./self.ts";
-import { cellToString, applyMoveToCell } from "./utils.ts";
+import { cellToString, applyMoveToCell, getDistance } from "./utils.ts";
 import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
 import { DANGER } from "./keys.ts";
+
+
+export const eatingScoresFromState = (urgency: number, state: State): number[] => {
+    // TODO: implement eatingScoresFromState for emergencies
+    return eatingScoresFromGrid(urgency, state);
+}
+
+
+export const eatingScoresFromGrid = (urgency: number, state: State): number[] => {
+    const scores = [0, 0, 0, 0];
+    // TODO: implement eatingScoresFromGrid
+    log.status("Skipping eatingScoresFromGrid, not yet implemented.")
+    return scores;
+}
 
 
 /**
