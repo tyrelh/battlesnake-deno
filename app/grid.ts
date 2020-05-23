@@ -1,5 +1,5 @@
 import { GameRequest, Cell, Snake } from "./types.ts";
-import { WALL_NEAR, FOOD, YOUR_BODY, SMALL_HEAD, SNAKE_BODY, ENEMY_HEAD, TAIL, DANGER, KILL_ZONE, SMALL_DANGER, FUTURE_2, DOWN, GRID_SYMBOLS, SPACE } from "./keys.ts";
+import { WALL_NEAR, FOOD, YOUR_BODY, SMALL_HEAD, SNAKE_BODY, ENEMY_HEAD, TAIL, DANGER, KILL_ZONE, SMALL_DANGER, FUTURE_2, DOWN, GRID_SYMBOLS, SPACE, UP } from "./keys.ts";
 import { newCell, applyOffsetToCell, cellToString } from "./utils.ts";
 import * as log from "./logger.ts";
 import { Y_DIRECTION, DEBUG_MAPS } from "./params.ts";
@@ -261,7 +261,8 @@ export class Grid {
                     log.status(row);
                 }
             }
-            else {
+            else if (Y_DIRECTION === UP) {
+                log.status("\n")
                 for (let i = this.height - 1; i >= 0; i--) {
                     let row = `${i % 10} `;
                     for (let j = 0; j < this.width; j++) {
@@ -273,7 +274,7 @@ export class Grid {
                 for (let x = 0; x < this.width; x++) {
                     xAxis += ` ${x % 10}`
                 }
-                log.status(`\n${xAxis}`);
+                log.status(`\n${xAxis}\n`);
             }
         }  
     };
