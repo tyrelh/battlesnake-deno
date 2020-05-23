@@ -3,6 +3,8 @@ A [Battlesnake](https://play.battlesnake.com/) written in TypeScript. Includes t
 
 This snake is built using [Deno](https://deno.land/) as a runtime, and the Deno standard http server via [Oak](https://deno.land/x/oak) middleware.
 
+![CI](https://github.com/tyrelh/battlesnake-deno/workflows/CI/badge.svg?branch=master&event=push)
+
 ## TL;DR
 * [Requirements](#Requirements):
     * [Deno](https://deno.land/manual/getting_started/installation)
