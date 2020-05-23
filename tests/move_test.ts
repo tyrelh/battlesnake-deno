@@ -2,13 +2,13 @@ import { assert } from "https://deno.land/std/testing/asserts.ts";
 import { move } from "../app/main.ts";
 import { GameRequest } from "../app/types.ts";
 
-Deno.test("Starter snake default return value test", () => {
-  // when
-  const result = move(mockGameRequest);
-  // then
-  assert(result?.move)
-  assert(result.move === "right")
-});
+// Deno.test("Starter snake default return value test", () => {
+//   // when
+//   const result = move(mockGameRequest);
+//   // then
+//   assert(result?.move)
+//   assert(result.move === "right")
+// });
 
 
 const mockGameRequest: GameRequest = {
