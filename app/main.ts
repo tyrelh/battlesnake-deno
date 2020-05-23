@@ -1,8 +1,11 @@
-import { Request, Response } from "https://deno.land/x/oak/mod.ts";
 import { GameRequest, MoveResponse, RootResponse } from "./types.ts";
 import * as log from "./logger.ts";
 import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
+import { myMinimumHealth } from "./self.ts";
+import { SAME_NUMBER_OF_SNAKES } from "./weights.ts";
+import { eat } from "./move.ts";
+import { DIRECTION, UP } from "./keys.ts";
 
 
 export const root = (): RootResponse => {
@@ -24,27 +27,31 @@ export const root = (): RootResponse => {
 
 export const move = (gameRequest: GameRequest): MoveResponse => {
     const startTime = Date.now();
+    let move = -1;
+
     //TODO: tyrelh save the move JSON
 
     const gameTurn = gameRequest.turn;
     log.status(`\n\n####################################### MOVE ${gameTurn}`);
     const health = gameRequest.you.health;
     const numSnakes = gameRequest.board.snakes.length;
+    const playSafe = numSnakes > SAME_NUMBER_OF_SNAKES;
 
+    const state = new State(gameRequest);
     try {
-        const state = new State(gameRequest);
         state.grid.preprocessGrid(state)
-    }
-    catch (e) {
+
+        if (health < myMinimumHealth(state)) {
+            move = eat(state, playSafe);
+        }
+
+    } catch (e) {
         log.error("Ex in main.buildGrid: ", e);
     }
-    
-    // let move = -1;
-
-    // if (health < )
 
     const endTime = Date.now();
     const timeTaken = endTime - startTime;
-    console.log(`Turn ${"x"} took ${timeTaken}ms.\n`);
-    return { move: "right" };
+    log.status(`${health} health remaining.`);
+    log.status(`Turn ${state.turn} took ${timeTaken}ms.\n`);
+    return { move: (move > 0) ? DIRECTION[move] : DIRECTION[UP] };
 }
