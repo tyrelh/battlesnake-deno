@@ -1,38 +1,47 @@
 import { Request, Response } from "https://deno.land/x/oak/mod.ts";
-import { GameState, MoveResponse, RootResponse } from "./types.ts";
+import { GameRequest, MoveResponse, RootResponse } from "./types.ts";
 import * as log from "./logger.ts";
-import { PARAMS } from "./params.ts";
-import { buildGrid } from "./grid.ts";
+import { State } from "./state.ts";
+import { MY_SNAKE } from "./params.ts";
 
 
 export const root = (): RootResponse => {
     log.status(`${log.divider} ROOT`);
-    const mySnake = PARAMS.MY_SNAKE
-    log.status(` apiversion: ${mySnake.API_VERSION}`)
-    log.status(` author: ${mySnake.AUTHOR}`)
-    log.status(` color: ${mySnake.COLOR}`)
-    log.status(` head: ${mySnake.HEAD_DESIGN}`)
-    log.status(` tail: ${mySnake.TAIL_DESIGN}`)
+    log.status(` apiversion: ${MY_SNAKE.API_VERSION}`)
+    log.status(` author: ${MY_SNAKE.AUTHOR}`)
+    log.status(` color: ${MY_SNAKE.COLOR}`)
+    log.status(` head: ${MY_SNAKE.HEAD_DESIGN}`)
+    log.status(` tail: ${MY_SNAKE.TAIL_DESIGN}`)
     return {
-        color: mySnake.COLOR,
-        head: mySnake.HEAD_DESIGN,
-        tail: mySnake.TAIL_DESIGN,
-        apiversion: mySnake.API_VERSION,
-        author: mySnake.AUTHOR
+        color: MY_SNAKE.COLOR,
+        head: MY_SNAKE.HEAD_DESIGN,
+        tail: MY_SNAKE.TAIL_DESIGN,
+        apiversion: MY_SNAKE.API_VERSION,
+        author: MY_SNAKE.AUTHOR
     };
 }
 
 
-export const move = (gameState: GameState): MoveResponse => {
+export const move = (gameRequest: GameRequest): MoveResponse => {
     const startTime = Date.now();
     //TODO: tyrelh save the move JSON
 
-    const gameTurn = gameState.turn;
+    const gameTurn = gameRequest.turn;
     log.status(`\n\n####################################### MOVE ${gameTurn}`);
-    const health = gameState.you.health;
-    const numSnakes = gameState.board.snakes.length;
+    const health = gameRequest.you.health;
+    const numSnakes = gameRequest.board.snakes.length;
 
-    const grid = buildGrid(gameState);
+    try {
+        const state = new State(gameRequest);
+        state.grid.preprocessGrid(state)
+    }
+    catch (e) {
+        log.error("Ex in main.buildGrid: ", e);
+    }
+    
+    // let move = -1;
+
+    // if (health < )
 
     const endTime = Date.now();
     const timeTaken = endTime - startTime;

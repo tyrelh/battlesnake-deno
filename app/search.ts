@@ -1,47 +1,58 @@
-import { GameState, Cell } from "./types.ts";
-import { PARAMS as P } from "./params.ts";
+import { GameRequest, Cell, Snake } from "./types.ts";
 import * as log from "./logger.ts";
-import { nearPerimeter, copyGrid, onPerimeter } from "./grid.ts";
 import { myLocation, isMe } from "./self.ts";
-import { cellToString } from "./utils.ts";
-
-
-/**
- * Preprocess grid to find valuable cells
- * @param grid 
- * @param gameState 
- */
-export const preprocessGrid = (grid: number[][], gameState: GameState): number[][] => {
-    log.status("Preprocessing grid.")
-    if (nearPerimeter(myLocation(gameState), grid)) {
-        log.debug("I am near perimeter.");
-        const enemyHeadLocations = getEnemyLocations(gameState);
-        const gridCopy = copyGrid(grid);
-
-        for (let enemyHead of enemyHeadLocations) {
-            if (onPerimeter(enemyHead, grid)) {
-                log.debug(`Enemy at ${cellToString(enemyHead)} is on perimeter`);
-                // TODO: tyrelh implement edgeFillFromEnemyToYou
-            }
-        }
-        return gridCopy;
-    }
-    return grid;
-}
+import { cellToString, applyMoveToCell } from "./utils.ts";
+import { State } from "./state.ts";
+import { Grid } from "./grid.ts";
+import { DANGER } from "./keys.ts";
 
 
 /**
  * Get a list of opponent head cells
- * @param gameState 
+ * @param state 
  */
-export const getEnemyLocations = (gameState: GameState): Cell[] => {
-    // TODO: tyrelh getEnemyLocations not taking into account friendly names
-    const locations = [];
-    for (let snake of gameState.board.snakes) {
-        if (isMe(snake, gameState)) {
+export const getEnemySnakes = (state: State): Snake[] => {
+    // FIXME: tyrelh getEnemyLocations not taking into account friendly names
+    const snakes: Snake[] = [];
+    for (let snake of state.board.snakes) {
+        if (isMe(snake, state)) {
             continue;
         }
-        locations.push(snake.head);
+        snakes.push(snake);
     }
-    return locations;
+    return snakes;
+}
+
+
+export const edgeFillFromEnemyToSelf = (enemy: Snake, gridDataCopy: number[][], state: State): number[][] => {
+    const enemyMoves: Cell[] = getEnemyMoveLocations(enemy, state);
+    for (let enemyMove of enemyMoves) {
+        // log.debug(`Doing enemy edge fill for move @ ${cellToString(enemyMove)}`)
+
+        // TODO: tyrelh implement edge flood fill
+        log.debug("Skipping edgeFillFromEnemyToSelf, not yet implemented.");
+
+    }
+
+    return gridDataCopy;
+}
+
+
+export const getEnemyMoveLocations = (enemy: Snake, state: State): Cell[] => {
+    const positions = [];
+    for (let m = 0; m < 4; m++) {
+        if (validMove(m, enemy.head, state)) {
+            positions.push(applyMoveToCell(m, enemy.head));
+        }
+    }
+    return positions
+}
+
+
+export const validMove = (move: number, cell: Cell, state: State): boolean => {
+    const newCell = applyMoveToCell(move, cell);
+    if (state.grid.outOfBounds(newCell)) {
+        return false;
+    }
+    return (state.grid.value(newCell) <= DANGER);
 }

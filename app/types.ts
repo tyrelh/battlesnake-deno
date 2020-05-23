@@ -1,3 +1,5 @@
+import { Grid } from "./grid.ts";
+
 export interface Game {
     id: string,
     timeout: number
@@ -25,14 +27,22 @@ export interface Board {
     snakes: Snake[]
 }
 
-export interface GameState {
+// export interface State {
+//     request: GameRequest,
+//     grid: Grid,
+//     game: Game,
+//     board: Board,
+//     self: Snake
+// }
+
+// Battlesnake API v1
+
+export interface GameRequest {
     game: Game,
     turn: number,
     board: Board,
     you: Snake
 }
-
-// Battlesnake API v1 Responses
 
 export interface RootResponse {
     color: string,
