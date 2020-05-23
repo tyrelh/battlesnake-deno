@@ -2,6 +2,7 @@ import { Snake, GameRequest, Cell } from "./types.ts";
 import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
 import { SURVIVAL_MIN_HEALTH, LONG_GAME_HEALTH_RESILIENCY, MULTIPLIER } from "./weights.ts";
+import { distanceFromCellToClosestFoodInFoodList } from "./search.ts";
 
 
 export const isFriendly = (snake: Snake): boolean => {
@@ -24,10 +25,19 @@ export const myLocation = (state: State): Cell => {
     return state.self.head;
 }
 
+export const myHealth = (state: State): number => {
+    return state.self.health;
+}
+
 export const myMinimumHealth = (state: State): number => {
     return (SURVIVAL_MIN_HEALTH - Math.floor(state.turn / LONG_GAME_HEALTH_RESILIENCY));
 }
 
 export const myHungerUrgency = (state: State): number => {
-    return (Math.round((101 - state.self.health) * MULTIPLIER.HUNGER_URGENCY));
+    return (Math.round((101 - myHealth(state)) * MULTIPLIER.HUNGER_URGENCY));
+}
+
+export const isHungerEmergency = (state: State): boolean => {
+    const distanceToClosestFood = distanceFromCellToClosestFoodInFoodList(myLocation(state), state);
+    return ((distanceToClosestFood >= myHealth(state) - 1) || myHealth(state) <= myMinimumHealth(state))
 }

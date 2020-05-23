@@ -1,9 +1,10 @@
 import { State } from "./state.ts";
-import { RIGHT, EATING, UP, DOWN, LEFT, DIRECTION_ICON, BEHAVIOURS } from "./keys.ts";
+import { RIGHT, EATING, UP, DOWN, LEFT, DIRECTION_ICON, BEHAVIOURS, EATING_EMERGENCY } from "./keys.ts";
 import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove } from "./scores.ts";
-import { myHungerUrgency } from "./self.ts";
+import { myHungerUrgency, isHungerEmergency } from "./self.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid } from "./search.ts";
 
 
 /**
@@ -12,14 +13,22 @@ import { myHungerUrgency } from "./self.ts";
  * @param playSafe 
  */
 export const eat = (state: State, playSafe: boolean = false): number => {
-    const scores = [0, 0, 0, 0];
+    let scores = [0, 0, 0, 0];
+    let behaviour = EATING;
     const hungerUrgency = myHungerUrgency(state);
-    const emergency = false; // TODO: implement emergency flag tyrelh
     log.status(`EATING w/ urgency ${hungerUrgency} ${emergency ? ", EMERGENCY!" : ""}`);
+
     state.grid.print();
-    // TODO: implement eat behaviour tyrelh
-    log.status("Skipping eating behaviour, not yet implemented.");
-    return addBiasesToBehaviour(scores, state, playSafe, EATING);
+
+    // if emergency look for closest foods in data list
+    if (emergency) {
+        behaviour = EATING_EMERGENCY;
+    }
+    // if not emergency use foods marked in grid
+    else {
+    }
+
+    return addBiasesToBehaviour(scores, state, playSafe, behaviour);
 }
 
 

@@ -49,6 +49,27 @@ export const getEnemyMoveLocations = (enemy: Snake, state: State): Cell[] => {
 }
 
 
+export const distanceFromCellToClosestFoodInFoodList = (start: Cell, state: State): number => {
+    try {
+        const foodList = state.board.food;
+        let closestFoodCell = null;
+        let closestFoodDistance = 9999;
+        for (let food of foodList) {
+            let currentDistance = getDistance(start, food);
+            if (currentDistance < closestFoodDistance) {
+                closestFoodCell = food;
+                closestFoodDistance = currentDistance;
+            }
+        }
+        return ((closestFoodDistance === 9999) ? (state.board.height * 0.7) : closestFoodDistance);
+    }
+    catch (e) {
+        log.error(`ex in search.distanceFromCellToClosestFoodInFoodList: `, e);
+    }
+    return ((state?.board?.height) ? (state.board.height * 0.7) : 80);
+}
+
+
 export const validMove = (move: number, cell: Cell, state: State): boolean => {
     const newCell = applyMoveToCell(move, cell);
     if (state.grid.outOfBounds(newCell)) {

@@ -41,6 +41,16 @@ export const applyOffsetToCell = (offset: Cell, cell: Cell): Cell => {
 
 
 /**
+ * Manhattan distance between two Cells
+ * @param a 
+ * @param b 
+ */
+export const getDistance = (a: Cell, b: Cell): number => {
+    return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y));
+  };
+
+
+/**
  * String representation of Cell
  * @param cell 
  */
