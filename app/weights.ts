@@ -23,3 +23,7 @@ export const BASE_MULTIPLIER = {
 export const MULTIPLIER = {
     HUNGER_URGENCY: 0.4
 }
+
+export const DECAY = {
+    FOOD_DISTANCE: 2.8
+}

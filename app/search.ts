@@ -1,10 +1,13 @@
 import { GameRequest, Cell, Snake } from "./types.ts";
 import * as log from "./logger.ts";
 import { myLocation, isMe } from "./self.ts";
-import { cellToString, applyMoveToCell, getDistance } from "./utils.ts";
+import { cellToString, applyMoveToCell, getDistance, newCell, calcDirection } from "./utils.ts";
 import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
-import { DANGER } from "./keys.ts";
+import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING } from "./keys.ts";
+import { DECAY } from "./weights.ts";
+import { moveInScores } from "./scores.ts";
+import { astar } from "./astar.ts";
 
 
 export const eatingScoresFromState = (urgency: number, state: State): number[] => {
@@ -15,8 +18,50 @@ export const eatingScoresFromState = (urgency: number, state: State): number[] =
 
 export const eatingScoresFromGrid = (urgency: number, state: State): number[] => {
     const scores = [0, 0, 0, 0];
-    // TODO: implement eatingScoresFromGrid
-    log.status("Skipping eatingScoresFromGrid, not yet implemented.")
+    try {
+        const myHead: Cell = myLocation(state);
+        const gridCopy: Grid = state.grid.copyGrid();
+        let food = null;
+        while (true) {
+            // get next closest food from grid
+            food = closestFood(myHead, gridCopy);
+            if (food === null) {
+                break;
+            }
+
+            // perform search for all possible moves
+            for (let m of DIRECTIONS) {
+                const startPosition = applyMoveToCell(m, myHead);
+                if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SMALL_DANGER) {
+                    let movePosition = null;
+                    let distance = 1;
+                    let move = null;
+                    let searchResult = astar(startPosition, food, state, SNAKE_BODY, true);
+                    if (searchResult.success) {
+                        movePosition = searchResult.position;
+                        distance = searchResult.distance;
+                        if (movePosition !== null) {
+                            move = calcDirection(myHead, movePosition);
+                        }
+                        if (move !== null) {
+                            log.debug(`Distance: ${distance}`);
+                            distance = distance / 2;
+                            scores[move] += (urgency * Math.exp((-Math.abs(distance)) / DECAY.FOOD_DISTANCE));
+                        }
+                    }
+                }
+            }
+            gridCopy.updateCell(food, WARNING);
+        }
+    } catch (e) {
+        log.error("EX in search.eatingScoresFromGrid: ", e);
+    }
+
+    if (!moveInScores(scores)) {
+        // TODO: enable backup search when implemented
+        log.debug("Skipping backup eatingScoresFromState search, not yet implemented")
+        // scores = eatingScoresFromState(urgency, state);
+    }
     return scores;
 }
 
@@ -90,4 +135,43 @@ export const validMove = (move: number, cell: Cell, state: State): boolean => {
         return false;
     }
     return (state.grid.value(newCell) <= DANGER);
+}
+
+
+export const closestFood = (startCell: Cell, grid: Grid): Cell | null => {
+    return closestTarget(startCell, grid, FOOD);
+}
+
+
+export const closestKillableSnake = (startCell: Cell, grid: Grid): Cell | null => {
+    return closestTarget(startCell, grid, KILL_ZONE);
+}
+
+
+export const closestDangerSnake = (startCell: Cell, grid: Grid): Cell | null => {
+    return closestTarget(startCell, grid, ENEMY_HEAD);
+}
+
+
+export const closestTarget = (startCell: Cell, grid: Grid, targetType: number): Cell | null => {
+    try {
+        let closestTarget = null;
+        let closestDistance = 9999;
+        for (let i = 0; i < grid.height; i++) {
+            for (let j = 0; j < grid.width; j++) {
+                const target = newCell(j, i);
+                if (grid.value(target) === targetType) {
+                    const distance = getDistance(startCell, target);
+                    if (distance < closestDistance) {
+                        closestTarget = target;
+                        closestDistance = distance;
+                    }
+                }
+            }
+        }
+        return closestTarget;
+    } catch (e) {
+        log.error(`ex in target.closestTarget ${e}`);
+    }
+    return null;
 }

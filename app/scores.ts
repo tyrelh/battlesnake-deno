@@ -12,7 +12,6 @@ import { cellToString } from "./utils.ts";
  * @param state 
  */
 export const baseScoreForCell = (cell: Cell, state: State): number => {
-    
     if (state.grid.outOfBounds(cell)) {
         return BASE_WEIGHT.FORGET_ABOUT_IT;
     }
@@ -117,6 +116,21 @@ export const highestScoreMove = (scores: number[]): number => {
     }
     return RIGHT;
 };
+
+
+/**
+ * check if there is any move in a scores array
+ * @param scores 
+ */
+// FIXME: moveInScores only testing for > 0, would miss [-50, -50, 0, -50]
+export const moveInScores = (scores: number[]): boolean => {
+    for (let move of scores) {
+        if (move !== 0) {
+            return true;
+        }
+    }
+    return false;
+  };
 
 
 /**
