@@ -170,12 +170,7 @@ export class Grid {
      */
     copyGrid = (): Grid => {
         const gridCopy = new Grid(this.width, this.height);
-        for (let i = 0; i < this.height; i++) {
-            for (let j = 0; j < this.width; j++) {
-                const cell = newCell(j, i);
-                gridCopy.updateCell(cell, this.value(cell));
-            }
-        }
+        gridCopy.data = this.copyGridData();
         return gridCopy;
     }
 
