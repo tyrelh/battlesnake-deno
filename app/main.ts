@@ -34,7 +34,7 @@ export const root = (): RootResponse => {
 export const start = (gameRequest: GameRequest): void => {
     try {
         // ensure previous game logs are cleared
-        // log.initLogs();
+        log.initLogs();
         log.status(`####################################### STARTING GAME ${gameRequest.game.id}`);
         log.status(`My snake id is ${gameRequest.you.id}`);
         slowestTime = 0;
@@ -57,6 +57,7 @@ export const move = (gameRequest: GameRequest): MoveResponse => {
     let move = -1;
 
     //TODO: tyrelh save the move JSON
+    log.saveJSON(gameRequest);
 
     const gameTurn = gameRequest.turn;
     log.status(`\n\n####################################### MOVE ${gameTurn}`);
@@ -127,7 +128,7 @@ export const end = (gameRequest: GameRequest): void => {
         log.status(`Used roughly ${(totalTime / totalAllottedTime).toFixed(1)}% of allotted time.`);
         log.status(`Average move time was ${averageTime.toFixed(1)}ms.`);
         // write logs for this game to file
-        // log.writeLogs(req.body);
+        log.writeLogs(gameRequest);
         slowestTime = 0;
         slowestMove = 0;
         moveTimes = [];
