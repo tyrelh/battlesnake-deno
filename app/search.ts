@@ -5,7 +5,7 @@ import { cellToString, applyMoveToCell, getDistance, newCell, calcDirection } fr
 import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
 import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING, FUTURE_2 } from "./keys.ts";
-import { DECAY, EXPONENT } from "./weights.ts";
+import { DECAY, EXPONENT, MULTIPLIER } from "./weights.ts";
 import { moveInScores } from "./scores.ts";
 import { astar } from "./astar.ts";
 
@@ -154,6 +154,53 @@ const getScoresForTargets = (targets: Cell[], scoringFunction: (distance: number
         log.error("EX in search.getHuntingScores: ", e);
     }
     return scores;
+}
+
+
+/**
+ * Get move scores for farther from walls bias
+ * @param state 
+ */
+export const fartherFromWallsBias = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    let minimumScore = 9999;
+    try {
+        for (let move of DIRECTIONS) {
+            const currentDistance = distanceFromWall(applyMoveToCell(move, myLocation(state)), state);
+            if (scores[move] < currentDistance) {
+                scores[move] = currentDistance * MULTIPLIER.WALL_DISTANCE
+                if (scores[move] < minimumScore) {
+                    minimumScore = scores[move];
+                }
+            }
+        }
+        scores = scores.map((x: number): number => x - minimumScore);
+    } catch (e) {
+        log.error("EX in search.fartherFromWallsBias", e);
+    }
+    return scores;
+}
+
+
+/**
+ * Calculate the distance from a Cell to the wall
+ * @param cell 
+ * @param state 
+ */
+export const distanceFromWall = (cell: Cell, state: State): number => {
+    try {
+        const yDown = cell.y;
+        const yUp = (state.grid.height - 1) - cell.y;
+        const xLeft = cell.x;
+        const xRight = (state.grid.width - 1) - cell.x;
+        const xDistance = Math.min(xLeft, xRight);
+        const yDistance = Math.min(yUp, yDown);
+        return (xDistance + yDistance);
+    }
+    catch (e) {
+        log.error(`ex in search.distanceFromWall: ${e}`)
+    };
+    return 0;
 }
 
 

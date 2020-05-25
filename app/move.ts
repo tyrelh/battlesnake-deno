@@ -4,7 +4,7 @@ import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
 import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2 } from "./search.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias } from "./search.ts";
 
 
 /**
@@ -91,21 +91,24 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     // TODO: implement fallback bias tyrelh
 
     // base move
-    const baseScores = baseMoveBias(state);
-    log.status(`Base scores:\n ${scoresToString(baseScores)}`);
-    scores = combineScores(baseScores, scores);
+    const baseBiasScores = baseMoveBias(state);
+    log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
+    scores = combineScores(baseBiasScores, scores);
 
     // TODO: implement tight move bias tyrelh
     // TODO: implement flood bias tyrelh
     // TODO: implement farther from danger snake heads bias tyrelh
     // TODO: implement closer to killable snake heads bias tyrelh
-    // TODO: implement farther from wall bias tyrelh
+    const fartherFromWallsBiasScores = fartherFromWallsBias(state);
+    log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
+    scores = combineScores(fartherFromWallsBiasScores, scores);
     // TODO: implement follow tail bias tyrelh
 
     scores = normalizeScores(scores);
     // log all scores together for readability in logs
     log.status(`\nBehaviour scores:\n ${scoresToString(behaviourScores)}`);
-    log.status(`Base scores:\n ${scoresToString(baseScores)}`);
+    log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
+    log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
 
     log.status(`\nFinal scores:\n ${scoresToString(scores)}`);
     log.status(`\nMove: ${DIRECTION_ICON[highestScoreMove(scores)]}${behaviour !== null ? `  was ${BEHAVIOURS[behaviour]}` : ""}\n`);

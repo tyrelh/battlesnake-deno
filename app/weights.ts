@@ -21,7 +21,8 @@ export const BASE_MULTIPLIER = {
 }
 
 export const MULTIPLIER = {
-    HUNGER_URGENCY: 0.4
+    HUNGER_URGENCY: 0.4,
+    WALL_DISTANCE: 2.2
 }
 
 export const DECAY = {
