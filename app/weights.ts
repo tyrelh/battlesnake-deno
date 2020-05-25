@@ -32,4 +32,5 @@ export const DECAY = {
 export const EXPONENT = {
     HUNT_KILLZONE_DISTANCE: 0.65,
     HUNT_FUTURE2_DISTANCE: 0.4,
+    ENEMY_HEAD_DISTANCE: 0.9
 }

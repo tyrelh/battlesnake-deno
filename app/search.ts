@@ -6,7 +6,7 @@ import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
 import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING, FUTURE_2 } from "./keys.ts";
 import { DECAY, EXPONENT, MULTIPLIER } from "./weights.ts";
-import { moveInScores } from "./scores.ts";
+import { moveInScores, normalizeScores } from "./scores.ts";
 import { astar } from "./astar.ts";
 
 
@@ -122,6 +122,31 @@ export const huntingScoresForAccessibleFuture2 = (state: State): number[] => {
         log.error("EX in search.huntingScoresForAccessibleFuture2: ", e);
     }
     return scores;
+}
+
+
+
+export const fartherFromDangerousSnakesBias = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const self = state.self;
+        for (let snake of state.board.snakes) {
+            if (snake.length >= self.length && !isMe(snake, state)) {
+                for (let move of DIRECTIONS) {
+                    const startPosition = applyMoveToCell(move, self.head);
+                    if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
+                        const distance = getDistance(startPosition, snake.head);
+                        if (distance) {
+                            scores[move] += Math.pow(distance, EXPONENT.ENEMY_HEAD_DISTANCE);
+                        }
+                    }
+                }
+            }
+        }
+    } catch(e) {
+        log.error(`EX in search.fartherFromDangerousSnakesBias: ${e}`);
+    }
+    return normalizeScores(scores) ;
 }
 
 
