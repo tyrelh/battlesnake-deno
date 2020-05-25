@@ -1,5 +1,5 @@
 import { State } from "./state.ts";
-import { RIGHT, EATING, UP, DOWN, LEFT, DIRECTION_ICON, BEHAVIOURS, EATING_EMERGENCY } from "./keys.ts";
+import { RIGHT, EATING, UP, DOWN, LEFT, DIRECTION_ICON, BEHAVIOURS, EATING_EMERGENCY, HUNTING } from "./keys.ts";
 import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove } from "./scores.ts";
@@ -41,6 +41,18 @@ export const eat = (state: State, playSafe: boolean = false): number => {
     }
 
     return addBiasesToBehaviour(scores, state, playSafe, behaviour);
+}
+
+/**
+ * Seek nearest killable enemy snake
+ * @param state 
+ * @param playSafe 
+ */
+export const hunt = (state: State, playSafe: boolean = false): number => {
+    let scores = [0, 0, 0, 0];
+    // TODO: implement hunting behaviour
+    log.status("Skipping hunting behaviour, not yet implemented.")
+    return addBiasesToBehaviour(scores, state, playSafe, HUNTING);
 }
 
 
