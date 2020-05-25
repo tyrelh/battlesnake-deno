@@ -2,7 +2,7 @@ import { GameRequest, MoveResponse, RootResponse, Snake } from "./types.ts";
 import * as log from "./logger.ts";
 import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
-import { myMinimumHealth } from "./self.ts";
+import { myMinimumHealth, amIBiggestSnake, existsSnakeSmallerThanMe } from "./self.ts";
 import { SAME_NUMBER_OF_SNAKES } from "./weights.ts";
 import { eat } from "./move.ts";
 import { DIRECTION, RIGHT } from "./keys.ts";
@@ -71,12 +71,24 @@ export const move = (gameRequest: GameRequest): MoveResponse => {
         log.error("EX in main.preprocessGrid: ", e);
     }
 
+    const iAmBiggestSnake = amIBiggestSnake(state);
+    const existsSmallerSnake = existsSnakeSmallerThanMe(state);
+
     // if you are hungry or small you gotta eat
     if (health < myMinimumHealth(state)) {
         try {
             move = eat(state, playSafe);
         } catch (e) {
-            log.error("Ex in main.hungry: ", e);
+            log.error("EX in main.hungry: ", e);
+        }
+    }
+
+    // if there are smaller snakes than you, hunt them
+    else if (iAmBiggestSnake || existsSmallerSnake) {
+        try {
+            move = hunt(state, playSafe);
+        } catch (e) {
+            log.error("EX in main.hunt: ", e);
         }
     }
 

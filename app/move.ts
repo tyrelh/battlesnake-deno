@@ -89,19 +89,16 @@ const baseMoveBias = (state: State): number[] => {
     const scores = [0, 0, 0, 0];
 
     let nextMove = applyMoveToCell(UP, state.self.head);
-    log.debug(`${UP} nextMove: ${cellToString( nextMove)}`);
     scores[UP] += baseScoreForCell(nextMove, state);
 
     nextMove = applyMoveToCell(DOWN, state.self.head);
-    log.debug(`${DOWN} nextMove: ${cellToString( nextMove)}`);
     scores[DOWN] += baseScoreForCell(applyMoveToCell(DOWN, state.self.head), state);
 
     nextMove = applyMoveToCell(LEFT, state.self.head);
-    log.debug(`${LEFT} nextMove: ${cellToString( nextMove)}`);
     scores[LEFT] += baseScoreForCell(applyMoveToCell(LEFT, state.self.head), state);
 
     nextMove = applyMoveToCell(RIGHT, state.self.head);
-    log.debug(`${RIGHT} nextMove: ${cellToString( nextMove)}`);
     scores[RIGHT] += baseScoreForCell(applyMoveToCell(RIGHT, state.self.head), state);
+
     return scores;
 }

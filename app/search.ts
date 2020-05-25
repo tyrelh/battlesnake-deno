@@ -10,24 +10,38 @@ import { moveInScores } from "./scores.ts";
 import { astar } from "./astar.ts";
 
 
-export const eatingScoresFromState = (urgency: number, state: State): number[] => {
-    // TODO: implement eatingScoresFromState for emergencies
-    return eatingScoresFromGrid(urgency, state);
+export const eatingScoresFromGrid = (urgency: number, state: State): number[] => {
+    const foods: Cell[] = [];
+    // loop through grid and collect all the food locations
+    for (let i = 0; i < state.grid.height; i++) {
+        for (let j = 0; j < state.grid.width; j++) {
+            const cell = newCell(j, i);
+            if (state.grid.value(cell) === FOOD) {
+                foods.push(cell);
+            }
+        }
+    }
+    let scores = eatingScoresFromListOfFood(foods, state, urgency);
+    if (!moveInScores(scores)) {
+        scores = eatingScoresFromState(urgency, state);
+    }
+    return scores
 }
 
 
-export const eatingScoresFromGrid = (urgency: number, state: State): number[] => {
+export const eatingScoresFromState = (urgency: number, state: State): number[] => {
+    return eatingScoresFromListOfFood(state.board.food, state, urgency);
+}
+
+
+export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency: number = 1) => {
     const scores = [0, 0, 0, 0];
     try {
         const myHead: Cell = myLocation(state);
-        const gridCopy: Grid = state.grid.copyGrid();
-        let food = null;
-        while (true) {
-            // get next closest food from grid
-            food = closestFood(myHead, gridCopy);
-            if (food === null) {
-                break;
-            }
+        const sortedFoodByDistance = foods.sort((a: Cell, b: Cell) => getDistance(myHead, a) - getDistance(myHead, b))
+        while (sortedFoodByDistance.length > 0) {
+            const food = sortedFoodByDistance[0];
+            sortedFoodByDistance.shift();
 
             // perform search for all possible moves
             for (let m of DIRECTIONS) {
@@ -51,16 +65,9 @@ export const eatingScoresFromGrid = (urgency: number, state: State): number[] =>
                     }
                 }
             }
-            gridCopy.updateCell(food, WARNING);
         }
     } catch (e) {
-        log.error("EX in search.eatingScoresFromGrid: ", e);
-    }
-
-    if (!moveInScores(scores)) {
-        // TODO: enable backup search when implemented
-        log.debug("Skipping backup eatingScoresFromState search, not yet implemented")
-        // scores = eatingScoresFromState(urgency, state);
+        log.error("EX in search.eatingScoresFromListOfFoods: ", e);
     }
     return scores;
 }
