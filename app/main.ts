@@ -4,12 +4,12 @@ import { State } from "./state.ts";
 import { MY_SNAKE } from "./params.ts";
 import { myMinimumHealth, amIBiggestSnake, existsSnakeSmallerThanMe } from "./self.ts";
 import { SAME_NUMBER_OF_SNAKES } from "./weights.ts";
-import { eat } from "./move.ts";
+import { eat, hunt } from "./move.ts";
 import { DIRECTION, RIGHT } from "./keys.ts";
 
 // globals to track over course of game
 // will break if multiple games are running simultaneously
-let slowest = 0;
+let slowestTime = 0;
 let slowestMove = 0;
 let moveTimes: number[] = [];
 
@@ -37,7 +37,7 @@ export const start = (gameRequest: GameRequest): void => {
         // log.initLogs();
         log.status(`####################################### STARTING GAME ${gameRequest.game.id}`);
         log.status(`My snake id is ${gameRequest.you.id}`);
-        slowest = 0;
+        slowestTime = 0;
         slowestMove = 0;
         moveTimes = [];
     
@@ -103,6 +103,11 @@ export const move = (gameRequest: GameRequest): MoveResponse => {
 
     const endTime = Date.now();
     const timeTaken = endTime - startTime;
+    if (timeTaken > slowestTime) {
+        slowestTime = timeTaken;
+        slowestMove = state.turn;
+    }
+    moveTimes.push(timeTaken);
     log.status(`${health} health remaining.`);
     log.status(`Turn ${state.turn} took ${timeTaken}ms.\n`);
     const result = { move: (move >= 0) ? DIRECTION[move] : DIRECTION[RIGHT] };
@@ -112,19 +117,21 @@ export const move = (gameRequest: GameRequest): MoveResponse => {
 
 export const end = (gameRequest: GameRequest): void => {
     try {
-        log.status(`\nSlowest move ${slowestMove} took ${slowest}ms.`);
+        log.status(`\nSlowest move ${slowestMove} took ${slowestTime}ms.`);
         const numberOfMoves = moveTimes.length;
         const totalTime = moveTimes.reduce((acc, c) => acc + c, 0);
         const averageTime = totalTime / numberOfMoves;
+        const totalAllottedTime = numberOfMoves * gameRequest.game.timeout;
         log.status(`Total time computing was ${totalTime}ms for ${numberOfMoves} moves.`);
+        log.status(`Total alloted time was ${totalAllottedTime}ms or ${totalAllottedTime / 1000}s.`);
+        log.status(`Used roughly ${(totalTime / totalAllottedTime).toFixed(1)}% of allotted time.`);
         log.status(`Average move time was ${averageTime.toFixed(1)}ms.`);
         // write logs for this game to file
         // log.writeLogs(req.body);
-        slowest = 0;
+        slowestTime = 0;
         slowestMove = 0;
         moveTimes = [];
     } catch (e) {
         log.error("EX in main.end: ", e)
     }
-    
   };
