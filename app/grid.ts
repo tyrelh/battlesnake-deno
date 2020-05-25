@@ -238,6 +238,24 @@ export class Grid {
 
 
     /**
+     * Return a list of all locations of the given type
+     * @param type
+     */
+    getAll = (type: number): Cell[] => {
+        const cells: Cell[] = [];
+        for (let i = 0; i < this.height; i++) {
+            for (let j = 0; j < this.width; j++) {
+                const currentCell = newCell(j, i);
+                if (this.value(currentCell) === type) {
+                    cells.push(currentCell);
+                }
+            }
+        }
+        return cells;
+    }
+
+
+    /**
      * Pretty print a grid to the console
      */
     print = () => {
