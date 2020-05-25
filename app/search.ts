@@ -4,23 +4,19 @@ import { myLocation, isMe } from "./self.ts";
 import { cellToString, applyMoveToCell, getDistance, newCell, calcDirection } from "./utils.ts";
 import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
-import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING } from "./keys.ts";
-import { DECAY } from "./weights.ts";
+import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING, FUTURE_2 } from "./keys.ts";
+import { DECAY, EXPONENT } from "./weights.ts";
 import { moveInScores } from "./scores.ts";
 import { astar } from "./astar.ts";
 
 
+/**
+ * Get move scores for eating with data from Grid
+ * @param urgency 
+ * @param state 
+ */
 export const eatingScoresFromGrid = (urgency: number, state: State): number[] => {
-    const foods: Cell[] = [];
-    // loop through grid and collect all the food locations
-    for (let i = 0; i < state.grid.height; i++) {
-        for (let j = 0; j < state.grid.width; j++) {
-            const cell = newCell(j, i);
-            if (state.grid.value(cell) === FOOD) {
-                foods.push(cell);
-            }
-        }
-    }
+    const foods: Cell[] = state.grid.getAll(FOOD);
     let scores = eatingScoresFromListOfFood(foods, state, urgency);
     if (!moveInScores(scores)) {
         scores = eatingScoresFromState(urgency, state);
@@ -29,15 +25,27 @@ export const eatingScoresFromGrid = (urgency: number, state: State): number[] =>
 }
 
 
+/**
+ * Get move scores for eating with data from state
+ * @param urgency 
+ * @param state 
+ */
 export const eatingScoresFromState = (urgency: number, state: State): number[] => {
     return eatingScoresFromListOfFood(state.board.food, state, urgency);
 }
 
 
+/**
+ * Get move scores for eating for a list of food
+ * @param foods 
+ * @param state 
+ * @param urgency 
+ */
 export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency: number = 1) => {
     const scores = [0, 0, 0, 0];
     try {
         const myHead: Cell = myLocation(state);
+        // TODO: refactor eatingScoresFromListOfFood to use the new scoring functions tyrelh
         const sortedFoodByDistance = foods.sort((a: Cell, b: Cell) => getDistance(myHead, a) - getDistance(myHead, b))
         while (sortedFoodByDistance.length > 0) {
             const food = sortedFoodByDistance[0];
@@ -68,6 +76,82 @@ export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency:
         }
     } catch (e) {
         log.error("EX in search.eatingScoresFromListOfFoods: ", e);
+    }
+    return scores;
+}
+
+
+/**
+ * Get move scores for hunting killzones
+ * @param state 
+ */
+export const huntingScoresForAccessableKillzones = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const scoringFunction = (distance: number, startPosition: Cell): number => {
+            let score = 0;
+            if (state.grid.value(startPosition) >= SMALL_DANGER) {
+                score = (Math.pow(distance, EXPONENT.HUNT_DISTANCE_KILLZONE) / 10);
+            } else {
+                score = Math.pow(distance, EXPONENT.HUNT_DISTANCE_KILLZONE);
+            }
+            return score;
+        }
+        const killzones = state.grid.getAll(KILL_ZONE);
+        scores = getScoresForTargets(killzones, scoringFunction, state);
+    } catch(e) {
+        log.error("EX in search.huntingScoresForAccessableKillzones: ", e);
+    }
+    return scores;
+}
+
+
+/**
+ * Get move scores for hunting future2s
+ * @param state 
+ */
+export const huntingScoresForAccessibleFuture2 = (state: State): number[] => {
+    let scores = [0, 0, 0, 0]
+    try {
+        const scoringFunction = (distance: number, startPosition: Cell): number => {
+            return Math.pow(distance, EXPONENT.HUNT_DISTANCE_FUTURE2)
+        }
+        const future2s = state.grid.getAll(FUTURE_2);
+        scores = getScoresForTargets(future2s, scoringFunction, state);
+    } catch(e) {
+        log.error("EX in search.huntingScoresForAccessibleFuture2: ", e);
+    }
+    return scores;
+}
+
+
+/**
+ * Get move scores for hunting a list of targets
+ * @param targets 
+ * @param scoringFunction 
+ * @param state 
+ */
+const getScoresForTargets = (targets: Cell[], scoringFunction: (distance: number, startPosition: Cell) => number, state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const myHead = myLocation(state);
+        // loop over all targets
+        for (let target of targets) {
+            // loop through all possible moves
+            for (let move of DIRECTIONS) {
+                const startPosition = applyMoveToCell(move, myHead);
+                // if move is valid
+                if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
+                    let searchResult = astar(startPosition, target, state, SNAKE_BODY, true);
+                    // if path is found
+                    if (searchResult.success) {
+                        scores[move] += scoringFunction(searchResult.distance, startPosition);
+                    }
+                }
+            }
+        }
+    } catch(e) {
+        log.error("EX in search.getHuntingScores: ", e);
     }
     return scores;
 }

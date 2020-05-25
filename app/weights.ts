@@ -27,3 +27,8 @@ export const MULTIPLIER = {
 export const DECAY = {
     FOOD_DISTANCE: 2.8
 }
+
+export const EXPONENT = {
+    HUNT_DISTANCE_KILLZONE: 0.65,
+    HUNT_DISTANCE_FUTURE2: 0.4
+}

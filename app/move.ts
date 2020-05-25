@@ -2,9 +2,9 @@ import { State } from "./state.ts";
 import { RIGHT, EATING, UP, DOWN, LEFT, DIRECTION_ICON, BEHAVIOURS, EATING_EMERGENCY, HUNTING } from "./keys.ts";
 import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
-import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove } from "./scores.ts";
-import { myHungerUrgency, isHungerEmergency } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid } from "./search.ts";
+import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
+import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2 } from "./search.ts";
 
 
 /**
@@ -16,11 +16,8 @@ export const eat = (state: State, playSafe: boolean = false): number => {
     let scores = [0, 0, 0, 0];
     let behaviour = EATING;
     const hungerUrgency = myHungerUrgency(state);
-    const distanceToClosestFood = distanceFromCellToClosestFoodInFoodList(state.self.head, state);
     const emergency = isHungerEmergency(state)
     log.status(`EATING w/ urgency ${hungerUrgency} ${emergency ? ", EMERGENCY!" : ""}`);
-
-    state.grid.print();
 
     // if emergency look for closest foods in data list
     if (emergency) {
@@ -28,7 +25,7 @@ export const eat = (state: State, playSafe: boolean = false): number => {
         try {
             scores = eatingScoresFromState(hungerUrgency, state);
         } catch (e) {
-            log.error(`ex in move.eat.emergency: ${e}`);
+            log.error(`EX in move.eat.emergency: ${e}`);
         }
     }
     // if not emergency use foods marked in grid
@@ -36,7 +33,7 @@ export const eat = (state: State, playSafe: boolean = false): number => {
         try {
             scores = eatingScoresFromGrid(hungerUrgency, state);
         } catch (e) {
-            log.error(`ex in move.eat.non-emergency: ${e}`);
+            log.error(`EX in move.eat.non-emergency: ${e}`);
         }
     }
 
@@ -50,8 +47,32 @@ export const eat = (state: State, playSafe: boolean = false): number => {
  */
 export const hunt = (state: State, playSafe: boolean = false): number => {
     let scores = [0, 0, 0, 0];
-    // TODO: implement hunting behaviour
-    log.status("Skipping hunting behaviour, not yet implemented.")
+    log.status("HUNTING");
+    try {
+        scores = huntingScoresForAccessableKillzones(state);
+        if (!moveInScores(scores)) {
+            log.status("No accessable killzone found, targeting future 2.")
+            scores = huntingScoresForAccessibleFuture2(state);
+        }
+    } catch (e) {
+        log.error(`EX in move.hunt: ${e}`);
+    }
+    return addBiasesToBehaviour(scores, state, playSafe, HUNTING);
+}
+
+
+export const lateHunt = (state: State, playSafe: boolean = false): number => {
+    let scores = [0, 0, 0, 0];
+    log.status("HUNTING, LATE GAME");
+    try {
+        if (existsSnakeSmallerThanMe(state)) {
+            scores = huntingScoresForAccessableKillzones(state);
+        } else {
+            scores = huntingScoresForAccessibleFuture2(state);
+        }
+    } catch (e) {
+        log.error(`EX in move.hunt: ${e}`);
+    }
     return addBiasesToBehaviour(scores, state, playSafe, HUNTING);
 }
 
