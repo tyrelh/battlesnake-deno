@@ -91,9 +91,9 @@ export const huntingScoresForAccessableKillzones = (state: State): number[] => {
         const scoringFunction = (distance: number, startPosition: Cell): number => {
             let score = 0;
             if (state.grid.value(startPosition) >= SMALL_DANGER) {
-                score = (Math.pow(distance, EXPONENT.HUNT_DISTANCE_KILLZONE) / 10);
+                score = (Math.pow(distance, EXPONENT.HUNT_KILLZONE_DISTANCE) / 10);
             } else {
-                score = Math.pow(distance, EXPONENT.HUNT_DISTANCE_KILLZONE);
+                score = Math.pow(distance, EXPONENT.HUNT_KILLZONE_DISTANCE);
             }
             return score;
         }
@@ -114,7 +114,7 @@ export const huntingScoresForAccessibleFuture2 = (state: State): number[] => {
     let scores = [0, 0, 0, 0]
     try {
         const scoringFunction = (distance: number, startPosition: Cell): number => {
-            return Math.pow(distance, EXPONENT.HUNT_DISTANCE_FUTURE2)
+            return Math.pow(distance, EXPONENT.HUNT_FUTURE2_DISTANCE)
         }
         const future2s = state.grid.getAll(FUTURE_2);
         scores = getScoresForTargets(future2s, scoringFunction, state);
