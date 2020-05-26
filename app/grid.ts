@@ -14,10 +14,10 @@ export class Grid {
     height: number;
     data: number[][];
 
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, fillValue?: number) {
         this.width = width;
         this.height = height;
-        this.data = this.initGrid(this.width, this.height);
+        this.data = this.initGrid(this.width, this.height, fillValue);
     }
 
 
