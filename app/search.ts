@@ -42,38 +42,46 @@ export const eatingScoresFromState = (urgency: number, state: State): number[] =
  * @param urgency 
  */
 export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency: number = 1) => {
-    const scores = [0, 0, 0, 0];
+    let scores = [0, 0, 0, 0];
     try {
-        const myHead: Cell = myLocation(state);
-        // TODO: refactor eatingScoresFromListOfFood to use the new scoring functions tyrelh
-        const sortedFoodByDistance = foods.sort((a: Cell, b: Cell) => getDistance(myHead, a) - getDistance(myHead, b))
-        while (sortedFoodByDistance.length > 0) {
-            const food = sortedFoodByDistance[0];
-            sortedFoodByDistance.shift();
-
-            // perform search for all possible moves
-            for (let m of DIRECTIONS) {
-                const startPosition = applyMoveToCell(m, myHead);
-                if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SMALL_DANGER) {
-                    let movePosition = null;
-                    let distance = 1;
-                    let move = null;
-                    let searchResult = astar(startPosition, food, state, SNAKE_BODY, true);
-                    if (searchResult.success) {
-                        movePosition = searchResult.position;
-                        distance = searchResult.distance;
-                        if (movePosition !== null) {
-                            move = calcDirection(myHead, movePosition);
-                        }
-                        if (move !== null) {
-                            log.debug(`Distance: ${distance}`);
-                            distance = distance / 2;
-                            scores[move] += (urgency * Math.exp((-Math.abs(distance)) / DECAY.FOOD_DISTANCE));
-                        }
-                    }
-                }
-            }
+        const scoringFunction = (d: number, _: Cell): number => {
+            return (urgency * Math.exp((-Math.abs(d)) / DECAY.FOOD_DISTANCE));
         }
+        scores = getScoresForTargets(myLocation(state), foods, scoringFunction, state);
+
+
+
+
+        // const myHead: Cell = myLocation(state);
+        // // TODO: refactor eatingScoresFromListOfFood to use the new scoring functions tyrelh
+        // const sortedFoodByDistance = foods.sort((a: Cell, b: Cell) => getDistance(myHead, a) - getDistance(myHead, b))
+        // while (sortedFoodByDistance.length > 0) {
+        //     const food = sortedFoodByDistance[0];
+        //     sortedFoodByDistance.shift();
+
+        //     // perform search for all possible moves
+        //     for (let m of DIRECTIONS) {
+        //         const startPosition = applyMoveToCell(m, myHead);
+        //         if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SMALL_DANGER) {
+        //             let movePosition = null;
+        //             let distance = 1;
+        //             let move = null;
+        //             let searchResult = astar(startPosition, food, state, SNAKE_BODY, true);
+        //             if (searchResult.success) {
+        //                 movePosition = searchResult.position;
+        //                 distance = searchResult.distance;
+        //                 if (movePosition !== null) {
+        //                     move = calcDirection(myHead, movePosition);
+        //                 }
+        //                 if (move !== null) {
+        //                     log.debug(`Distance: ${distance}`);
+        //                     distance = distance / 2;
+        //                     scores[move] += (urgency * Math.exp((-Math.abs(distance)) / DECAY.FOOD_DISTANCE));
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     } catch (e) {
         log.error("EX in search.eatingScoresFromListOfFoods: ", e);
     }
@@ -98,7 +106,7 @@ export const huntingScoresForAccessableKillzones = (state: State): number[] => {
             return score;
         }
         const killzones = state.grid.getAll(KILL_ZONE);
-        scores = getScoresForTargets(killzones, scoringFunction, state);
+        scores = getScoresForTargets(myLocation(state),killzones, scoringFunction, state);
     } catch(e) {
         log.error("EX in search.huntingScoresForAccessableKillzones: ", e);
     }
@@ -113,11 +121,11 @@ export const huntingScoresForAccessableKillzones = (state: State): number[] => {
 export const huntingScoresForAccessibleFuture2 = (state: State): number[] => {
     let scores = [0, 0, 0, 0]
     try {
-        const scoringFunction = (distance: number, startPosition: Cell): number => {
+        const scoringFunction = (distance: number, _: Cell): number => {
             return Math.pow(distance, EXPONENT.HUNT_FUTURE2_DISTANCE)
         }
         const future2s = state.grid.getAll(FUTURE_2);
-        scores = getScoresForTargets(future2s, scoringFunction, state);
+        scores = getScoresForTargets(myLocation(state), future2s, scoringFunction, state);
     } catch(e) {
         log.error("EX in search.huntingScoresForAccessibleFuture2: ", e);
     }
@@ -129,24 +137,55 @@ export const huntingScoresForAccessibleFuture2 = (state: State): number[] => {
 export const fartherFromDangerousSnakesBias = (state: State): number[] => {
     let scores = [0, 0, 0, 0];
     try {
-        const self = state.self;
+        const scoringFunction = (distance: number, _: Cell): number => {
+            return Math.pow(distance, EXPONENT.ENEMY_HEAD_DISTANCE);
+        }
+        const dangerousSnakeHeads: Cell[] = [];
         for (let snake of state.board.snakes) {
-            if (snake.length >= self.length && !isMe(snake, state)) {
-                for (let move of DIRECTIONS) {
-                    const startPosition = applyMoveToCell(move, self.head);
-                    if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
-                        const distance = getDistance(startPosition, snake.head);
-                        if (distance) {
-                            scores[move] += Math.pow(distance, EXPONENT.ENEMY_HEAD_DISTANCE);
-                        }
-                    }
-                }
+            if (snake.length >= state.self.length && !isMe(snake, state)) {
+                dangerousSnakeHeads.push(snake.head);
             }
         }
+        scores = getScoresForTargets(myLocation(state), dangerousSnakeHeads, scoringFunction, state)
+        // const self = state.self;
+        // for (let snake of state.board.snakes) {
+        //     if (snake.length >= self.length && !isMe(snake, state)) {
+        //         for (let move of DIRECTIONS) {
+        //             const startPosition = applyMoveToCell(move, self.head);
+        //             if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
+        //                 const distance = getDistance(startPosition, snake.head);
+        //                 if (distance) {
+        //                     scores[move] += Math.pow(distance, EXPONENT.ENEMY_HEAD_DISTANCE);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     } catch(e) {
         log.error(`EX in search.fartherFromDangerousSnakesBias: ${e}`);
     }
     return normalizeScores(scores) ;
+}
+
+
+export const closerToTailsBias = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const scoringFunction = (distance: number, _: Cell): number => {
+            return (Math.exp(-Math.abs(distance) / DECAY.TAIL_DISTANCE) * MULTIPLIER.TAIL_DISTANCE);
+        }
+        const tails: Cell[] = [];
+        for (let snake of state.board.snakes) {
+            if (isMe(snake, state)) {
+                tails.push(snake.body[snake.length - 1]);
+            }
+            tails.push(snake.body[snake.length - 1]);
+        }
+        scores = getScoresForTargets(myLocation(state), tails, scoringFunction, state);
+    } catch (e) {
+        log.error(`EX in search.closerToTailBias: ${e}`);
+    }
+    return scores;
 }
 
 
@@ -156,18 +195,17 @@ export const fartherFromDangerousSnakesBias = (state: State): number[] => {
  * @param scoringFunction 
  * @param state 
  */
-const getScoresForTargets = (targets: Cell[], scoringFunction: (distance: number, startPosition: Cell) => number, state: State): number[] => {
+const getScoresForTargets = (startPosition: Cell, targets: Cell[], scoringFunction: (distance: number, startPosition: Cell) => number, state: State): number[] => {
     let scores = [0, 0, 0, 0];
     try {
-        const myHead = myLocation(state);
         // loop over all targets
         for (let target of targets) {
             // loop through all possible moves
             for (let move of DIRECTIONS) {
-                const startPosition = applyMoveToCell(move, myHead);
+                const movePosition = applyMoveToCell(move, startPosition);
                 // if move is valid
-                if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
-                    let searchResult = astar(startPosition, target, state, SNAKE_BODY, true);
+                if (!state.grid.outOfBounds(movePosition) && state.grid.value(movePosition) < SNAKE_BODY) {
+                    let searchResult = astar(movePosition, target, state, SNAKE_BODY, true);
                     // if path is found
                     if (searchResult.success) {
                         scores[move] += scoringFunction(searchResult.distance, startPosition);

@@ -25,13 +25,15 @@ export const BASE_MULTIPLIER = {
 
 export const MULTIPLIER = {
     HUNGER_URGENCY: 0.4,
+    TAIL_DISTANCE: 2.0,
     WALL_DISTANCE: 2.2,
     WALL_NEAR_FILL: -0.5,
     DANGER_FILL: 0.06
 }
 
 export const DECAY = {
-    FOOD_DISTANCE: 2.8
+    FOOD_DISTANCE: 2.8,
+    TAIL_DISTANCE: 2.0,
 }
 
 export const EXPONENT = {

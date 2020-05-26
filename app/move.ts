@@ -4,7 +4,7 @@ import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
 import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias } from "./search.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias, closerToTailsBias } from "./search.ts";
 
 
 /**
@@ -90,7 +90,7 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
 
     // TODO: implement fallback bias tyrelh
 
-    // base move bias
+    // base bias
     const baseBiasScores = baseMoveBias(state);
     log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
     scores = combineScores(baseBiasScores, scores);
@@ -102,19 +102,22 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
     scores = combineScores(floodBiasScores, scores)
 
-    // farther from dangerous snakes bias
+    // dangerous snakes bias
     const fartherFromDangerousSnakesBiasScores = fartherFromDangerousSnakesBias(state);
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
     scores = combineScores(fartherFromDangerousSnakesBiasScores, scores);
 
     // TODO: implement closer to killable snake heads bias tyrelh
 
-    // farther from walls bias
+    // center bias
     const fartherFromWallsBiasScores = fartherFromWallsBias(state);
     log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
     scores = combineScores(fartherFromWallsBiasScores, scores);
 
-    // TODO: implement follow tail bias tyrelh
+    // tail bias
+    const closerToTailsScores = closerToTailsBias(state);
+    log.status(`Closer to tails scores:\n ${scoresToString(closerToTailsScores)}`);
+    scores = combineScores(closerToTailsScores, scores);
 
     // log all scores together for readability in logs
     log.status(`\nBehaviour scores:\n ${scoresToString(behaviourScores)}`);
@@ -122,7 +125,10 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
     log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
+    log.status(`Closer to tails scores:\n ${scoresToString(closerToTailsScores)}`);
 
+    state.grid.print();
+    
     scores = normalizeScores(scores);
     log.status(`\nFinal scores:\n ${scoresToString(scores)}`);
     log.status(`\nMove: ${DIRECTION_ICON[highestScoreMove(scores)]}${behaviour !== null ? `  was ${BEHAVIOURS[behaviour]}` : ""}\n`);
