@@ -149,12 +149,12 @@ const newResult = (success: boolean, distance: number = 9999, position: Cell = n
 // TODO: walkback assumes there is a path to walk. No error handling if there isn't tyrelh
 const walkback = (astarScoreGrid: AstarScoreCell[][], start: Cell, destination: Cell, returnStart: boolean = false): AstarSearchResult => {
     let nextPos = destination;
-    let distance = 0;
+    let distance = 1;
     log.debug(`Astar start pos: ${cellToString(start)}`);
   
     if (sameCell(start, destination)) {
       log.debug(`Astar start same as destination: ${cellToString(destination)}`);
-      return newResult(true, distance, start);
+      return newResult(true, 0, start);
     }
   
     while (!sameCell(astarScoreGrid[nextPos.y][nextPos.x].previous, start)) {
