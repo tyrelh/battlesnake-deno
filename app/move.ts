@@ -4,7 +4,7 @@ import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
 import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias } from "./search.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias } from "./search.ts";
 
 
 /**
@@ -97,7 +97,10 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
 
     // TODO: implement tight move bias tyrelh
 
-    // TODO: implement flood bias tyrelh
+    // flood bias
+    const floodBiasScores = floodBias(state);
+    log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
+    scores = combineScores(floodBiasScores, scores)
 
     // farther from dangerous snakes bias
     const fartherFromDangerousSnakesBiasScores = fartherFromDangerousSnakesBias(state);
@@ -116,6 +119,7 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     // log all scores together for readability in logs
     log.status(`\nBehaviour scores:\n ${scoresToString(behaviourScores)}`);
     log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
+    log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
     log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
 

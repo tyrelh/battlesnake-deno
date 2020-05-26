@@ -9,10 +9,13 @@ export const BASE_WEIGHT = {
     FORGET_ABOUT_IT: -200,
     SPACE: 0.9,
     FOOD: 0.4,
+    TAIL: 12.3,
     KILL_ZONE: 4.5,
     WALL_NEAR: -0.4,
     WARNING: -2.6,
+    FUTURE_2: -0.7,
     SMALL_DANGER: -11.0,
+    ENEMY_HEAD: -5.9,
     DANGER: -12
 }
 export const BASE_MULTIPLIER = {
@@ -22,7 +25,9 @@ export const BASE_MULTIPLIER = {
 
 export const MULTIPLIER = {
     HUNGER_URGENCY: 0.4,
-    WALL_DISTANCE: 2.2
+    WALL_DISTANCE: 2.2,
+    WALL_NEAR_FILL: -0.5,
+    DANGER_FILL: 0.06
 }
 
 export const DECAY = {

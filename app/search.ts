@@ -1,11 +1,11 @@
 import { GameRequest, Cell, Snake } from "./types.ts";
 import * as log from "./logger.ts";
 import { myLocation, isMe } from "./self.ts";
-import { cellToString, applyMoveToCell, getDistance, newCell, calcDirection } from "./utils.ts";
+import { cellToString, applyMoveToCell, getDistance, newCell, calcDirection, applyOffsetToCell } from "./utils.ts";
 import { State } from "./state.ts";
 import { Grid } from "./grid.ts";
-import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING, FUTURE_2 } from "./keys.ts";
-import { DECAY, EXPONENT, MULTIPLIER } from "./weights.ts";
+import { DANGER, FOOD, KILL_ZONE, ENEMY_HEAD, DIRECTIONS, SMALL_DANGER, SNAKE_BODY, WARNING, FUTURE_2, SMALL_HEAD, TAIL, WALL_NEAR } from "./keys.ts";
+import { DECAY, EXPONENT, MULTIPLIER, BASE_WEIGHT } from "./weights.ts";
 import { moveInScores, normalizeScores } from "./scores.ts";
 import { astar } from "./astar.ts";
 
@@ -229,6 +229,25 @@ export const distanceFromWall = (cell: Cell, state: State): number => {
 }
 
 
+export const floodBias = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const myHead = myLocation(state);
+        log.status("Performing flood fill searches");
+        for (let move of DIRECTIONS) {
+            const startPosition = applyMoveToCell(move, myHead);
+            if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
+                scores[move] += floodFill(startPosition, state);
+                // scores[move] += floodFill(startPosition, state, [KILL_ZONE, DANGER, WARNING, SMALL_DANGER]);
+            }
+        }
+    } catch (e) {
+        log.error(`EX in search.floodBias: ${e}`);
+    }
+    return scores;
+}
+
+
 /**
  * Get a list of opponent head cells
  * @param state 
@@ -337,4 +356,162 @@ export const closestTarget = (startCell: Cell, grid: Grid, targetType: number): 
         log.error(`ex in target.closestTarget ${e}`);
     }
     return null;
+}
+
+
+export const floodFill = (startPosition: Cell, state: State, constraints: number[] = []): number => {
+    const TRUE = 1;
+    const FALSE = 0;
+    const self = state.self;
+
+    // initialize tracking structures
+    let closedGrid = new Grid(state.grid.width, state.grid.height, FALSE);
+    let openGrid = new Grid(state.grid.width, state.grid.height, FALSE);
+    let openStack: Cell[] = [];
+
+    // things to track
+    let area = 0;
+    let enemyHeads = 0;
+    let killZones = 0;
+    let tails = 0;
+    let foods = 0;
+    let warnings = 0;
+    let walls = 0;
+    let dangers = 0;
+    let futures = 0;
+
+    // const inGrid = (cell: Cell, grd: Grid): number => {
+    //     try {
+    //         return grd.value(cell);
+    //     }
+    //     catch (e) {
+    //         log.error(`ex in search.fill.inGrid: ${e}`);
+    //         return NOT_CHECKED;
+    //     }
+    // };
+
+    const addToOpen = (cell: Cell): boolean => {
+        try {
+          if (!state.grid.outOfBounds(cell) && !closedGrid.value(cell) && !openGrid.value(cell)) {
+                if (state.grid.value(cell) <= DANGER) {
+                    for (let constraint of constraints) {
+                        // if very first cell you test is a killzone or future move, thats fine, don't return
+                        if (area === 0 && (state.grid.value(cell) === KILL_ZONE || state.grid.value(cell) === FUTURE_2)) {
+                            break;
+                        }
+                        if (state.grid.value(cell) === constraint) {
+                            return false;
+                        }
+                    }
+                    openStack.push(cell);
+                    openGrid.updateCell(cell, TRUE);
+
+                } else {
+                    switch(state.grid.value(cell)) {
+                        case ENEMY_HEAD:
+                        case SMALL_HEAD:
+                            enemyHeads++;
+                            break;
+                        default:
+                    }
+                }
+            }
+        }
+        catch (e) {
+            log.error(`ex in search.floodFill.addToOpen: ${e}`);
+        }
+        return false;
+    };
+
+    const removeFromOpen = (): Cell | null => {
+        try {
+            let cell = openStack.pop();
+            if (!cell) {
+                return null;
+            }
+            openGrid.updateCell(cell, FALSE);
+            return cell;
+        }
+        catch (e) {
+            log.error(`ex in search.floodFill.removeFromOpen: ${e}`);
+        }
+        return null;
+    };
+
+    const addToClosed = (cell: Cell | null) => {
+        if (cell === null) {
+            return;
+        }
+        closedGrid.updateCell(cell, TRUE); 
+    };
+
+    let current = myLocation(state);
+    // let givenMovePos = newCell(current.x, current.y);
+    addToOpen(startPosition);
+    addToClosed(current);
+
+    // iterate over all possible moves given the current move
+    while (openStack.length > 0) {
+        const nextMove = removeFromOpen();
+        if (nextMove !== null) {
+            addToClosed(nextMove);
+            switch(state.grid.value(nextMove)) {
+                // case k.ENEMY_HEAD:
+                // case k.SMALL_HEAD:
+                //   enemyHeads++;
+                //   break;
+                case TAIL:
+                    tails++;
+                    break;
+                case KILL_ZONE:
+                    killZones++;
+                    break;
+                case FOOD:
+                    foods++;
+                    break;
+                case WALL_NEAR:
+                    walls++;
+                    break;
+                case WARNING:
+                    warnings++;
+                    break;
+                case DANGER:
+                case SMALL_DANGER:
+                    dangers++;
+                    break;
+                case FUTURE_2:
+                    futures++;
+                    break;
+                default:
+            }
+            area++;
+
+            // check down
+            const nDown = newCell(nextMove.x, nextMove.y - 1);
+            addToOpen(nDown);
+            // check up
+            const nUp = newCell(nextMove.x, nextMove.y + 1);
+            addToOpen(nUp);
+            // check left
+            const nLeft = newCell(nextMove.x - 1, nextMove.y);
+            addToOpen(nLeft);
+            // check right
+            const nRight = newCell(nextMove.x + 1, nextMove.y);
+            addToOpen(nRight);
+        }
+    }
+
+    let score = 0;
+    score += area * BASE_WEIGHT.SPACE;
+    score += tails * BASE_WEIGHT.TAIL;
+    score += foods * BASE_WEIGHT.FOOD;
+    score += enemyHeads * BASE_WEIGHT.ENEMY_HEAD;
+    score += killZones * BASE_WEIGHT.KILL_ZONE;
+    score += warnings * BASE_WEIGHT.WARNING;
+    score += walls * (BASE_WEIGHT.WALL_NEAR * MULTIPLIER.WALL_NEAR_FILL);
+    score += dangers * (BASE_WEIGHT.DANGER * MULTIPLIER.DANGER_FILL);
+    score += futures * BASE_WEIGHT.FUTURE_2;
+
+    log.debug(`Score in fill for cell ${cellToString(startPosition)}: ${score.toFixed(1)}. Area: ${area}`);
+    return score;
 }
