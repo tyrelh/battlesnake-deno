@@ -307,12 +307,9 @@ export const edgeFillFromEnemyToSelf = (enemy: Snake, gridDataCopy: number[][], 
     const enemyMoves: Cell[] = getEnemyMoveLocations(enemy, state);
     for (let enemyMove of enemyMoves) {
         // log.debug(`Doing enemy edge fill for move @ ${cellToString(enemyMove)}`)
-
         // TODO: tyrelh implement edge flood fill
         log.debug("Skipping edgeFillFromEnemyToSelf, not yet implemented.");
-
     }
-
     return gridDataCopy;
 }
 
@@ -325,6 +322,27 @@ export const getEnemyMoveLocations = (enemy: Snake, state: State): Cell[] => {
         }
     }
     return positions
+}
+
+
+export const tightMoveBias = (state: State): number[] => {
+    const scores = [0, 0, 0, 0];
+    try {
+        for (let move of DIRECTIONS) {
+            let nextCell = applyMoveToCell(move, myLocation(state));
+            if (!state.grid.outOfBounds(nextCell) && state.grid.value(nextCell) <= DANGER) {
+                for (let direction of DIRECTIONS) {
+                    let cellToCheck = applyMoveToCell(direction, nextCell);
+                    if (!state.grid.outOfBounds(cellToCheck) && state.grid.value(cellToCheck) <= WARNING) {
+                        scores[move] += MULTIPLIER.TIGHT_MOVE;
+                    }
+                }
+            }
+        }
+    } catch(e) {
+        log.error(`EX in search.tightMoveBias: ${e}`);
+    }
+    return scores;
 }
 
 

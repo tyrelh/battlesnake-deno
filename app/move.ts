@@ -4,7 +4,7 @@ import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
 import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias, closerToTailsBias } from "./search.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias, closerToTailsBias, tightMoveBias } from "./search.ts";
 
 
 /**
@@ -96,6 +96,9 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     scores = combineScores(baseBiasScores, scores);
 
     // TODO: implement tight move bias tyrelh
+    const tightMoveBiasScores = tightMoveBias(state);
+    log.status(`Tight move bias scores:\n ${scoresToString(tightMoveBiasScores)}`);
+    scores = combineScores(tightMoveBiasScores, scores)
 
     // flood bias
     const floodBiasScores = floodBias(state);
@@ -122,6 +125,7 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     // log all scores together for readability in logs
     log.status(`\nBehaviour scores:\n ${scoresToString(behaviourScores)}`);
     log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
+    log.status(`Tight move bias scores:\n ${scoresToString(tightMoveBiasScores)}`);
     log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
     log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);

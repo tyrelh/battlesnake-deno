@@ -28,7 +28,8 @@ export const MULTIPLIER = {
     TAIL_DISTANCE: 2.0,
     WALL_DISTANCE: 1.2, // started @ 2.2 -
     WALL_NEAR_FILL: -0.5,
-    DANGER_FILL: 0.06
+    DANGER_FILL: 0.06,
+    TIGHT_MOVE: 1.0 // started @ 2.8 --
 }
 
 export const DECAY = {
