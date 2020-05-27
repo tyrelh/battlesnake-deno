@@ -9,6 +9,22 @@ Deno.test("Should take danger head on collision instead of dead end", () => {
   // when
   const result = move(gameRequest);
   // then
-  assert(result?.move)
   assert(result.move === expectedMove);
 });
+
+Deno.test("Two dangerous snakes converging on the left move", () => {
+  // given
+  const gameRequest = {"game":{"id":"94feded6-26c7-4a9a-b9a3-570831fced0d","timeout":500},"turn":36,"board":{"height":11,"width":11,"food":[{"x":1,"y":1},{"x":2,"y":2}],"snakes":[{"id":"gs_9mgCVvHRD7QkPc6TCBcYMFbC","name":"SnickerSnek","health":78,"body":[{"x":0,"y":2},{"x":0,"y":3},{"x":1,"y":3},{"x":1,"y":2}],"head":{"x":0,"y":2},"length":4,"shout":""},{"id":"gs_rjMFrTGVqJhQ6Bg7q6C7qJvb","name":"hissin-bastid","health":97,"body":[{"x":8,"y":8},{"x":7,"y":8},{"x":6,"y":8},{"x":5,"y":8},{"x":5,"y":7},{"x":4,"y":7},{"x":3,"y":7},{"x":2,"y":7}],"head":{"x":8,"y":8},"length":8,"shout":""},{"id":"gs_FGrrMq96fmR3KQRjFFrVQp3D","name":"snacky","health":90,"body":[{"x":7,"y":5},{"x":6,"y":5},{"x":5,"y":5},{"x":4,"y":5},{"x":3,"y":5},{"x":2,"y":5},{"x":1,"y":5},{"x":0,"y":5}],"head":{"x":7,"y":5},"length":8,"shout":""},{"id":"gs_gvx4VB8KdchgmRtWHf9xvfMS","name":"giraffe-snek","health":64,"body":[{"x":8,"y":6},{"x":7,"y":6},{"x":6,"y":6}],"head":{"x":8,"y":6},"length":3,"shout":""},{"id":"gs_CmkCbPbHKMg3Hq7Yv889vch8","name":"Zero Cool Deno Snake Local","health":64,"body":[{"x":9,"y":7},{"x":9,"y":6},{"x":9,"y":5}],"head":{"x":9,"y":7},"length":3,"shout":""}]},"you":{"id":"gs_CmkCbPbHKMg3Hq7Yv889vch8","name":"Zero Cool Deno Snake Local","health":64,"body":[{"x":9,"y":7},{"x":9,"y":6},{"x":9,"y":5}],"head":{"x":9,"y":7},"length":3,"shout":""}}
+  ;
+  const expectedMove = "right"; // up may be acceptable too, but definitely worse than right
+  // when
+  const result = move(gameRequest);
+  // then
+  assert(result.move === expectedMove);
+});
+
+
+
+
+
+

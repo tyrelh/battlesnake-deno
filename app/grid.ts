@@ -104,7 +104,7 @@ export class Grid {
                 for (let offset of future1Offsets) {
                     try {
                         const position = applyOffsetToCell(offset, snake.head)
-                        if (!this.outOfBounds(position) && this.value(position) <= DANGER) {
+                        if (!this.outOfBounds(position) && this.value(position) < DANGER) {
                             this.updateCell(position, future1Key);
                         }
                     } catch (e) {
