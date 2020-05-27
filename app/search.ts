@@ -93,7 +93,7 @@ export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency:
  * Get move scores for hunting killzones
  * @param state 
  */
-export const huntingScoresForAccessableKillzones = (state: State): number[] => {
+export const huntingScoresForAccessibleKillzones = (state: State): number[] => {
     let scores = [0, 0, 0, 0];
     try {
         const scoringFunction = (distance: number, startPosition: Cell): number => {
@@ -106,7 +106,7 @@ export const huntingScoresForAccessableKillzones = (state: State): number[] => {
             return score;
         }
         const killzones = state.grid.getAll(KILL_ZONE);
-        scores = getScoresForTargets(myLocation(state),killzones, scoringFunction, state);
+        scores = getScoresForTargets(myLocation(state), killzones, scoringFunction, state);
     } catch(e) {
         log.error("EX in search.huntingScoresForAccessableKillzones: ", e);
     }
@@ -146,25 +146,26 @@ export const fartherFromDangerousSnakesBias = (state: State): number[] => {
                 dangerousSnakeHeads.push(snake.head);
             }
         }
-        scores = getScoresForTargets(myLocation(state), dangerousSnakeHeads, scoringFunction, state)
-        // const self = state.self;
-        // for (let snake of state.board.snakes) {
-        //     if (snake.length >= self.length && !isMe(snake, state)) {
-        //         for (let move of DIRECTIONS) {
-        //             const startPosition = applyMoveToCell(move, self.head);
-        //             if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SNAKE_BODY) {
-        //                 const distance = getDistance(startPosition, snake.head);
-        //                 if (distance) {
-        //                     scores[move] += Math.pow(distance, EXPONENT.ENEMY_HEAD_DISTANCE);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        scores = getScoresForTargets(myLocation(state), dangerousSnakeHeads, scoringFunction, state);
     } catch(e) {
         log.error(`EX in search.fartherFromDangerousSnakesBias: ${e}`);
     }
     return normalizeScores(scores) ;
+}
+
+
+export const closerToKillableSnakesBias = (state: State): number[] => {
+    let scores = [0, 0, 0, 0];
+    try {
+        const scoringFunction = (distance: number, startCell: Cell): number => {
+            return (-Math.pow(distance, EXPONENT.KILL_ZONE_DISTANCE))
+        }
+        const killzones = state.grid.getAll(KILL_ZONE);
+        scores = getScoresForTargets(myLocation(state), killzones, scoringFunction, state);
+    } catch(e) {
+        log.error(`EX in search.closerToKillableSnakesBias: ${e}`);
+    }
+    return scores;
 }
 
 

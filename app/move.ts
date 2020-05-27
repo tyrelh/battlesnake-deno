@@ -4,7 +4,7 @@ import * as log from "./logger.ts";
 import { applyMoveToCell, cellToString } from "./utils.ts";
 import { baseScoreForCell, scoresToString, combineScores, normalizeScores, highestScoreMove, moveInScores } from "./scores.ts";
 import { myHungerUrgency, isHungerEmergency, existsSnakeSmallerThanMe } from "./self.ts";
-import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessableKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias, closerToTailsBias, tightMoveBias } from "./search.ts";
+import { distanceFromCellToClosestFoodInFoodList, eatingScoresFromState, eatingScoresFromGrid, huntingScoresForAccessibleKillzones, huntingScoresForAccessibleFuture2, fartherFromWallsBias, fartherFromDangerousSnakesBias, floodBias, closerToTailsBias, tightMoveBias, closerToKillableSnakesBias } from "./search.ts";
 
 
 /**
@@ -49,7 +49,7 @@ export const hunt = (state: State, playSafe: boolean = false): number => {
     let scores = [0, 0, 0, 0];
     log.status("HUNTING");
     try {
-        scores = huntingScoresForAccessableKillzones(state);
+        scores = huntingScoresForAccessibleKillzones(state);
         if (!moveInScores(scores)) {
             log.status("No accessable killzone found, targeting future 2.")
             scores = huntingScoresForAccessibleFuture2(state);
@@ -66,7 +66,7 @@ export const lateHunt = (state: State, playSafe: boolean = false): number => {
     log.status("HUNTING, LATE GAME");
     try {
         if (existsSnakeSmallerThanMe(state)) {
-            scores = huntingScoresForAccessableKillzones(state);
+            scores = huntingScoresForAccessibleKillzones(state);
         } else {
             scores = huntingScoresForAccessibleFuture2(state);
         }
@@ -95,7 +95,7 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     log.status(`Base bias scores:\n ${scoresToString(baseBiasScores)}`);
     scores = combineScores(baseBiasScores, scores);
 
-    // TODO: implement tight move bias tyrelh
+    // tight move bias
     const tightMoveBiasScores = tightMoveBias(state);
     log.status(`Tight move bias scores:\n ${scoresToString(tightMoveBiasScores)}`);
     scores = combineScores(tightMoveBiasScores, scores)
@@ -110,7 +110,10 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
     scores = combineScores(fartherFromDangerousSnakesBiasScores, scores);
 
-    // TODO: implement closer to killable snake heads bias tyrelh
+    // killable snakes bias
+    const closerToKillableSnakesBiasScores = closerToKillableSnakesBias(state);
+    log.status(`Closer to killable snakes bias scores:\n ${scoresToString(closerToKillableSnakesBiasScores)}`);
+    scores = combineScores(closerToKillableSnakesBiasScores, scores);
 
     // center bias
     const fartherFromWallsBiasScores = fartherFromWallsBias(state);
@@ -128,6 +131,7 @@ const addBiasesToBehaviour = (behaviourScores: number[], state: State, playSafe:
     log.status(`Tight move bias scores:\n ${scoresToString(tightMoveBiasScores)}`);
     log.status(`Flood bias scores:\n ${scoresToString(floodBiasScores)}`);
     log.status(`Farther from dangerous snakes bias scores:\n ${scoresToString(fartherFromDangerousSnakesBiasScores)}`);
+    log.status(`Closer to killable snakes bias scores:\n ${scoresToString(closerToKillableSnakesBiasScores)}`);
     log.status(`Farther from walls bias scores:\n ${scoresToString(fartherFromWallsBiasScores)}`);
     log.status(`Closer to tails scores:\n ${scoresToString(closerToTailsScores)}`);
 
