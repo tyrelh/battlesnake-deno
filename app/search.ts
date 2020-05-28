@@ -48,40 +48,6 @@ export const eatingScoresFromListOfFood = (foods: Cell[], state: State, urgency:
             return (urgency * Math.exp((-Math.abs(d)) / DECAY.FOOD_DISTANCE));
         }
         scores = getScoresForTargets(myLocation(state), foods, scoringFunction, state);
-
-
-
-
-        // const myHead: Cell = myLocation(state);
-        // // TODO: refactor eatingScoresFromListOfFood to use the new scoring functions tyrelh
-        // const sortedFoodByDistance = foods.sort((a: Cell, b: Cell) => getDistance(myHead, a) - getDistance(myHead, b))
-        // while (sortedFoodByDistance.length > 0) {
-        //     const food = sortedFoodByDistance[0];
-        //     sortedFoodByDistance.shift();
-
-        //     // perform search for all possible moves
-        //     for (let m of DIRECTIONS) {
-        //         const startPosition = applyMoveToCell(m, myHead);
-        //         if (!state.grid.outOfBounds(startPosition) && state.grid.value(startPosition) < SMALL_DANGER) {
-        //             let movePosition = null;
-        //             let distance = 1;
-        //             let move = null;
-        //             let searchResult = astar(startPosition, food, state, SNAKE_BODY, true);
-        //             if (searchResult.success) {
-        //                 movePosition = searchResult.position;
-        //                 distance = searchResult.distance;
-        //                 if (movePosition !== null) {
-        //                     move = calcDirection(myHead, movePosition);
-        //                 }
-        //                 if (move !== null) {
-        //                     log.debug(`Distance: ${distance}`);
-        //                     distance = distance / 2;
-        //                     scores[move] += (urgency * Math.exp((-Math.abs(distance)) / DECAY.FOOD_DISTANCE));
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
     } catch (e) {
         log.error("EX in search.eatingScoresFromListOfFoods: ", e);
     }
